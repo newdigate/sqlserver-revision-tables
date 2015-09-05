@@ -6,6 +6,18 @@ For a given table, the scripts will
 * create the trigger for inserting rows into the revision table
 * import existing rows from the table into the revision table
 
+limitations:
+* the output of each stored procedures is limited to 8000 characters. This will be addressed shortly. 
+
+updates:
+* 05 September 2015
+** FIXED SQLServer 2008 compatability issue by using [sys].[columns] instead of [sys].[dm_exec_describe_first_result_set] to get column definitions.
+** Split sql into seperate schemas for revision tables and non-revision tables
+** Using is_identity to identity primary key instead of LIKE '%ID'....
+
+todo:
+* Get around 8K limitation on generated SQL by returning table of VARCHAR(MAX) instead of returning VARCHAR(MAX) parameter
+
 For instance say we have a table:
 ```sql
 CREATE TABLE [dbo].Employee (
@@ -15,31 +27,31 @@ CREATE TABLE [dbo].Employee (
     [Surname] VARCHAR(100) NULL,
     [Birthdate] DATETIME NULL
 )
-INSERT INTO Employee (Firstname, Initial, Surname, Birthdate) VALUES ('Nic', 'B', 'Newdigate',GetDate())
+INSERT INTO Employee (Firstname, Initial, Surname, Birthdate) VALUES ('Nic', 'C', 'Newdigate',GetDate())
 ```
 
 Here is how we would create a revision / audit table for it:
 ```sql
     DECLARE @sql nvarchar(MAX)
 
-    SELECT @sql = [dbo].[GenerateRevisionTableDDL] ('Employee')
+    SELECT @sql = [rev].[GenerateRevisionTableDDL] ('Employee','dbo','rev')
     PRINT @sql
     EXECUTE sp_executesql @sql
 
-    SELECT @sql = [dbo].[GenerateRevisionTriggerDDL] ('Employee')
+    SELECT @sql = [rev].[GenerateRevisionTriggerDDL] ('Employee','dbo','rev')
     PRINT @sql
     EXECUTE sp_executesql @sql
 
-    SELECT @sql = [dbo].[GenerateImportExistingRowsSQL] ('Employee')
+    SELECT @sql = [rev].[GenerateImportExistingRowsSQL] ('Employee','dbo','rev')
     PRINT @sql
     EXECUTE sp_executesql @sql
 ```
 
 Which creates and executes this SQL:
 ```sql
-CREATE TABLE EmployeeRev (
-	[ID]	BIGINT	NOT NULL PRIMARY KEY IDENTITY,
-	[EmployeeID]	BIGINT	NOT NULL,
+CREATE TABLE [rev].[EmployeeRev] (
+	[EmployeeRevId]	BIGINT	NOT NULL PRIMARY KEY IDENTITY,
+	[EmployeeId]	BIGINT	NOT NULL,
 	[Firstname] varchar(100) NULL,
 	[Initial] char(3) NULL,
 	[Surname] varchar(100) NULL,
@@ -48,8 +60,8 @@ CREATE TABLE EmployeeRev (
 	[updated] DATETIME NOT NULL DEFAULT GetDate(),
 	[updatedby] VARCHAR(100) NOT NULL DEFAULT SYSTEM_USER)
 	
-CREATE TRIGGER tr_Employee_rev
-ON [Employee]
+CREATE TRIGGER [dbo].[tr_Employee_rev]
+ON [dbo].[Employee]
 AFTER UPDATE, INSERT, DELETE
 AS
 BEGIN

@@ -1,21 +1,34 @@
-﻿CREATE FUNCTION [dbo].[GenerateRevTableColumnsDDL]
+﻿CREATE FUNCTION [rev].[GenerateRevTableColumnsDDL]
 ( 
-	@TableName AS VARCHAR(50) 
+	@TableName AS VARCHAR(50),
+	@SchemaName as varchar(50) = 'dbo'
 )
 RETURNS VARCHAR(MAX)
 AS
 BEGIN 
 	DECLARE @sql NVARCHAR(MAX) = N'';
 	SELECT @sql += CASE
-				WHEN column_ordinal = 1 AND UPPER(name) = 'ID' THEN
-					CHAR(9) + '[ID]'+ CHAR(9) + 'BIGINT' +  CHAR(9) + 'NOT NULL PRIMARY KEY IDENTITY,' + CHAR(13) + CHAR(10) +
-					CHAR(9) + '['+@TableName+'ID]'+ CHAR(9) + 'BIGINT' +  CHAR(9) + 'NOT NULL,' + CHAR(13) + CHAR(10)
+				WHEN c.is_identity = 1 AND UPPER(c.name) like '%Id' THEN
+					CHAR(9) + '['+@TableName+'RevId]'+ CHAR(9) + 'BIGINT' +  CHAR(9) + 'NOT NULL PRIMARY KEY IDENTITY,' + CHAR(13) + CHAR(10) +
+					CHAR(9) + '['+@TableName+'Id]'+ CHAR(9) + 'BIGINT' +  CHAR(9) + 'NOT NULL,' + CHAR(13) + CHAR(10)
 				ELSE
-					CHAR(9) + '[' + name + '] ' + system_type_name + ' NULL,'+ CHAR(13) + CHAR(10) 
+
+					CASE 
+						WHEN t.name = 'varchar' THEN
+							CHAR(9) + '[' + c.name + '] ' + t.name + '(' + CONVERT(VARCHAR(10),c.max_length) + ')'  + ' NULL,'+ CHAR(13) + CHAR(10) 
+						WHEN t.name = 'decimal' THEN
+							CHAR(9) + '[' + c.name + '] ' + t.name + '(' + CONVERT(VARCHAR(10),c.[precision]) + ',' +  CONVERT(VARCHAR(10),c.scale) + ')'  + ' NULL,'+ CHAR(13) + CHAR(10) 
+					ELSE 
+						CHAR(9) + '[' + c.name + '] ' + t.name + ' NULL,'+ CHAR(13) + CHAR(10) 
+					END
 			END
-	FROM sys.dm_exec_describe_first_result_set('select * from dbo.['+@TableName+']', NULL, 1)
+	FROM sys.columns c  
+	INNER JOIN sys.types AS t
+	  ON c.system_type_id = t.system_type_id
+	AND c.user_type_id = t.user_type_id
+	WHERE c.[object_id] = OBJECT_ID(@SchemaName + '.' + @TableName)
+
 	RETURN @sql + CHAR(9) + '[operation] CHAR(1) NOT NULL,' + CHAR(13) + CHAR(10)
 				+ CHAR(9) + '[updated] DATETIME NOT NULL DEFAULT GetDate(),'+ CHAR(13) + CHAR(10)
 				+ CHAR(9) + '[updatedby] VARCHAR(100) NOT NULL DEFAULT SYSTEM_USER'
 END
- 
