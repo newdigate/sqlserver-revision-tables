@@ -11,9 +11,9 @@ limitations:
 
 updates:
 * 05 September 2015
-** FIXED SQLServer 2008 compatability issue by using [sys].[columns] instead of [sys].[dm_exec_describe_first_result_set] to get column definitions.
-** Split sql into seperate schemas for revision tables and non-revision tables
-** Using is_identity to identity primary key instead of LIKE '%ID'....
+	* fixed SQLServer 2008 compatability issue by using [sys].[columns] instead of [sys].[dm_exec_describe_first_result_set] to get column definitions.
+	* Split sql into seperate schemas for revision tables and non-revision tables
+	* Using is_identity to identity primary key instead of LIKE '%ID'....
 
 todo:
 * Get around 8K limitation on generated SQL by returning table of VARCHAR(MAX) instead of returning VARCHAR(MAX) parameter
