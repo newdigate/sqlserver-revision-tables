@@ -39,17 +39,26 @@ Here is how we would create a revision / audit table for it:
 ```sql
     DECLARE @sql nvarchar(MAX)
 
+    -- generate and execute sql to create audit / revision table
     SELECT @sql = [rev].[GenerateRevisionTableDDL] ('Employee','dbo','rev')
     PRINT @sql
     EXECUTE sp_executesql @sql
 
+    -- generate and execute sql to create trigger to capture revision row on insert, update or delete
     SELECT @sql = [rev].[GenerateRevisionTriggerDDL] ('Employee','dbo','rev')
     PRINT @sql
     EXECUTE sp_executesql @sql
 
+    -- generate and execute sql to import existing rows to revision tables with operation column in revision table populated with 'm' (for migrated)
     SELECT @sql = [rev].[GenerateImportExistingRowsSQL] ('Employee','dbo','rev')
     PRINT @sql
     EXECUTE sp_executesql @sql
+
+    -- generate and execute sql to create indexes on the revision tables
+    SELECT @sql = [rev].[GenerateRevisionIdIndexDDL]('Employee','dbo','rev')
+    PRINT @sql
+    EXECUTE sp_executesql @sql
+
 ```
 
 Which creates and executes this SQL:
@@ -71,7 +80,8 @@ CREATE TRIGGER [dbo].[tr_User_rev]
 	AS
 	BEGIN
 		DECLARE @USERNAME VARCHAR(100)
-        SET @USERNAME = CASE WHEN CONVERT(VARCHAR, CONTEXT_INFO()) <> '' THEN CONVERT(VARCHAR, CONTEXT_INFO()) ELSE SYSTEM_USER END
+        	SET @USERNAME = CASE WHEN CONVERT(VARCHAR, CONTEXT_INFO()) <> '' THEN CONVERT(VARCHAR, CONTEXT_INFO()) ELSE SYSTEM_USER END
+		
 		IF EXISTS(SELECT * FROM INSERTED) AND EXISTS (SELECT * FROM DELETED)
 		BEGIN
 			INSERT INTO [rev].[UserRev] SELECT i.Id, i.Firstname,i.Initial,i.Surname,i.Birthdate,'u' as operation, GetDate() as updated, @USERNAME as updatedby FROM INSERTED i
@@ -87,4 +97,7 @@ CREATE TRIGGER [dbo].[tr_User_rev]
 	END
 
 IF NOT EXISTS(Select 0 from [rev].[UserRev]) INSERT INTO [rev].UserRev (UserId, Firstname,Initial,Surname,Birthdate, operation) SELECT u.Id, u.Firstname,u.Initial,u.Surname,u.Birthdate, 'm'  from [dbo].[User] u
+
+CREATE INDEX idx_UserREV_UserId ON [rev].[UserRev] (UserId ASC)
+
 ```
