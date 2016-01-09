@@ -1,6 +1,7 @@
 # SQLServer Revision Tables
 
 [![Join the chat at https://gitter.im/newdigate/sqlserver-revision-tables](https://badges.gitter.im/newdigate/sqlserver-revision-tables.svg)](https://gitter.im/newdigate/sqlserver-revision-tables?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 This project aims to create scripts to automate the creation of revision tables for an existing table in SQLServer.
 
 For a given table, the scripts will 
