@@ -35,7 +35,8 @@ SELECT	s.name,
 		t.name, 
 		[rev].[GenerateRevisionTableDDL]( t.name, s.name, 'rev') as SQLTableDDL,
 		[rev].[GenerateRevisionTriggerDDL]( t.name, s.name, 'rev') as SQLTriggerDDL,
-		[rev].[GenerateImportExistingRowsSQL]( t.name, s.name, 'rev') as SQLImportExistingRows
+		[rev].[GenerateImportExistingRowsSQL]( t.name, s.name, 'rev') as SQLImportExistingRows,
+		[rev].[GenerateRevisionIdIndexDDL]( t.name, s.name, 'rev') as SQLIndexDDL		
 from sys.tables t
 JOIN sys.schemas s
 ON t.schema_id = s.schema_id
