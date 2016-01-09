@@ -65,26 +65,26 @@ CREATE TABLE [rev].[EmployeeRev] (
 	[updated] DATETIME NOT NULL DEFAULT GetDate(),
 	[updatedby] VARCHAR(100) NOT NULL DEFAULT SYSTEM_USER)
 	
-CREATE TRIGGER [dbo].[tr_Employee_rev]
-ON [dbo].[Employee]
-AFTER UPDATE, INSERT, DELETE
-AS
-BEGIN
-	IF EXISTS(SELECT * FROM INSERTED) AND EXISTS (SELECT * FROM DELETED)
+CREATE TRIGGER [dbo].[tr_User_rev]
+	ON [dbo].[User]
+	AFTER UPDATE, INSERT, DELETE
+	AS
 	BEGIN
-		INSERT INTO [EmployeeRev](EmployeeID,Firstname,Initial,Surname,Birthdate,operation, updated, updatedby) SELECT inserted.ID, inserted.Firstname,inserted.Initial,inserted.Surname,inserted.Birthdate,'u', GetDate(), SYSTEM_USER FROM INSERTED
-	END	
-
-	IF EXISTS (SELECT * FROM INSERTED) AND NOT EXISTS(SELECT * FROM DELETED)
-	BEGIN
-		INSERT INTO [EmployeeRev](EmployeeID,Firstname,Initial,Surname,Birthdate,operation, updated, updatedby) SELECT inserted.ID, inserted.Firstname,inserted.Initial,inserted.Surname,inserted.Birthdate,'i', GetDate(), SYSTEM_USER FROM INSERTED
+		DECLARE @USERNAME VARCHAR(100)
+        SET @USERNAME = CASE WHEN CONVERT(VARCHAR, CONTEXT_INFO()) <> '' THEN CONVERT(VARCHAR, CONTEXT_INFO()) ELSE SYSTEM_USER END
+		IF EXISTS(SELECT * FROM INSERTED) AND EXISTS (SELECT * FROM DELETED)
+		BEGIN
+			INSERT INTO [rev].[UserRev] SELECT i.Id, i.Firstname,i.Initial,i.Surname,i.Birthdate,'u' as operation, GetDate() as updated, @USERNAME as updatedby FROM INSERTED i
+		END	
+		IF EXISTS (SELECT * FROM INSERTED) AND NOT EXISTS(SELECT * FROM DELETED)
+		BEGIN
+			INSERT INTO [rev].[UserRev] SELECT i.Id, i.Firstname,i.Initial,i.Surname,i.Birthdate,'i' as operation, GetDate() as updated, @USERNAME as updatedby FROM INSERTED i
+		END
+		IF EXISTS(SELECT * FROM DELETED) AND NOT EXISTS(SELECT * FROM INSERTED)
+		BEGIN
+			INSERT INTO [rev].[UserRev] SELECT d.Id, d.Firstname,d.Initial,d.Surname,d.Birthdate,'d' as operation, GetDate() as updated, @USERNAME as updatedby FROM DELETED d
+		END
 	END
 
-	IF EXISTS(SELECT * FROM DELETED) AND NOT EXISTS(SELECT * FROM INSERTED)
-	BEGIN
-		INSERT INTO [EmployeeRev](EmployeeID,Firstname,Initial,Surname,Birthdate,operation, updated, updatedby) SELECT deleted.ID, deleted.Firstname,deleted.Initial,deleted.Surname,deleted.Birthdate,'d', GetDate(), SYSTEM_USER FROM DELETED 
-	END
-END
-
-INSERT INTO EmployeeRev (EmployeeID, Firstname,Initial,Surname,Birthdate, operation) SELECT u.ID, u.Firstname,u.Initial,u.Surname,u.Birthdate, 'i'  from [Employee] u
+IF NOT EXISTS(Select 0 from [rev].[UserRev]) INSERT INTO [rev].UserRev (UserId, Firstname,Initial,Surname,Birthdate, operation) SELECT u.Id, u.Firstname,u.Initial,u.Surname,u.Birthdate, 'm'  from [dbo].[User] u
 ```
