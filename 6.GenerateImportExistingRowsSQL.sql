@@ -25,8 +25,8 @@ BEGIN
 	DECLARE @sql VARCHAR(MAX);
 
 	IF (@PrimaryKey is not null)
-		SELECT @sql = 'IF NOT EXISTS(Select 0 from ['+@RevSchemaName+'].['+@TableName+'Rev]) INSERT INTO ['+@RevSchemaName+'].'+@TableName+'Rev ('+@TableName+'Id, '+[rev].[GetColumnNames](@TableName,@SchemaName)+', operation) SELECT u.'+@PrimaryKey+', '+[rev].[GetPrefixedColumnNames](@TableName, 'u', @SchemaName) + ', ''i''  from ['+@SchemaName+'].['+@TableName+'] u';
+		SELECT @sql = 'IF NOT EXISTS(Select 0 from ['+@RevSchemaName+'].['+@TableName+'Rev]) INSERT INTO ['+@RevSchemaName+'].'+@TableName+'Rev ('+@TableName+'Id, '+[rev].[GetColumnNames](@TableName,@SchemaName)+', operation) SELECT u.'+@PrimaryKey+', '+[rev].[GetPrefixedColumnNames](@TableName, 'u', @SchemaName) + ', ''m''  from ['+@SchemaName+'].['+@TableName+'] u';
 	ELSE 
-		SELECT @sql = 'IF NOT EXISTS(Select 0 from ['+@RevSchemaName+'].['+@TableName+'Rev]) INSERT INTO ['+@RevSchemaName+'].'+@TableName+'Rev ('+[rev].[GetColumnNames](@TableName,@SchemaName)+', operation) SELECT '+[rev].[GetPrefixedColumnNames](@TableName, 'u', @SchemaName) + ', ''i''  from ['+@SchemaName+'].['+@TableName+'] u';
+		SELECT @sql = 'IF NOT EXISTS(Select 0 from ['+@RevSchemaName+'].['+@TableName+'Rev]) INSERT INTO ['+@RevSchemaName+'].'+@TableName+'Rev ('+[rev].[GetColumnNames](@TableName,@SchemaName)+', operation) SELECT '+[rev].[GetPrefixedColumnNames](@TableName, 'u', @SchemaName) + ', ''m''  from ['+@SchemaName+'].['+@TableName+'] u';
 	RETURN @sql
 END

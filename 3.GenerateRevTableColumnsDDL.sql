@@ -14,10 +14,10 @@ BEGIN
 				ELSE
 
 					CASE 
-						WHEN t.name = 'varchar' THEN
-							CHAR(9) + '[' + c.name + '] ' + t.name + '(' + CONVERT(VARCHAR(10),c.max_length) + ')'  + ' NULL,'+ CHAR(13) + CHAR(10) 
+						WHEN (t.name like '%varchar') THEN
+							CHAR(9) + '[' + c.name + '] ' + UPPER(t.name) + '(' + CASE WHEN c.max_length = -1 THEN 'MAX' ELSE CONVERT(VARCHAR(10),c.max_length) END + ')'  + ' NULL,'+ CHAR(13) + CHAR(10) 
 						WHEN t.name = 'decimal' THEN
-							CHAR(9) + '[' + c.name + '] ' + t.name + '(' + CONVERT(VARCHAR(10),c.[precision]) + ',' +  CONVERT(VARCHAR(10),c.scale) + ')'  + ' NULL,'+ CHAR(13) + CHAR(10) 
+							CHAR(9) + '[' + c.name + '] ' + UPPER(t.name) + '(' + CONVERT(VARCHAR(10),c.[precision]) + ',' +  CONVERT(VARCHAR(10),c.scale) + ')'  + ' NULL,'+ CHAR(13) + CHAR(10) 
 					ELSE 
 						CHAR(9) + '[' + c.name + '] ' + t.name + ' NULL,'+ CHAR(13) + CHAR(10) 
 					END

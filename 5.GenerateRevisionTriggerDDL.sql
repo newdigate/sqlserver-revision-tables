@@ -28,17 +28,19 @@ BEGIN
 	AFTER UPDATE, INSERT, DELETE
 	AS
 	BEGIN
+		DECLARE @USERNAME VARCHAR(100)
+        SET @USERNAME = CASE WHEN CONVERT(VARCHAR, CONTEXT_INFO()) <> '''' THEN CONVERT(VARCHAR, CONTEXT_INFO()) ELSE SYSTEM_USER END
 		IF EXISTS(SELECT * FROM INSERTED) AND EXISTS (SELECT * FROM DELETED)
 		BEGIN
-			INSERT INTO ['+@RevSchemaName+'].['+@TableName+'Rev] SELECT i.'+@PrimaryKey+', '+[rev].[GetPrefixedColumnNames](@TableName,'i', @SchemaName)+',''u'' as operation, GetDate() as updated, SYSTEM_USER as updatedby FROM INSERTED i
+			INSERT INTO ['+@RevSchemaName+'].['+@TableName+'Rev] SELECT i.'+@PrimaryKey+', '+[rev].[GetPrefixedColumnNames](@TableName,'i', @SchemaName)+',''u'' as operation, GetDate() as updated, @USERNAME as updatedby FROM INSERTED i
 		END	
 		IF EXISTS (SELECT * FROM INSERTED) AND NOT EXISTS(SELECT * FROM DELETED)
 		BEGIN
-			INSERT INTO ['+@RevSchemaName+'].['+@TableName+'Rev] SELECT i.'+@PrimaryKey+', '+[rev].[GetPrefixedColumnNames](@TableName,'i', @SchemaName)+',''i'' as operation, GetDate() as updated, SYSTEM_USER as updatedby FROM INSERTED i
+			INSERT INTO ['+@RevSchemaName+'].['+@TableName+'Rev] SELECT i.'+@PrimaryKey+', '+[rev].[GetPrefixedColumnNames](@TableName,'i', @SchemaName)+',''i'' as operation, GetDate() as updated, @USERNAME as updatedby FROM INSERTED i
 		END
 		IF EXISTS(SELECT * FROM DELETED) AND NOT EXISTS(SELECT * FROM INSERTED)
 		BEGIN
-			INSERT INTO ['+@RevSchemaName+'].['+@TableName+'Rev] SELECT d.'+@PrimaryKey+', '+ [rev].[GetPrefixedColumnNames](@TableName,'d', @SchemaName)+',''d'' as operation, GetDate() as updated, SYSTEM_USER as updatedby FROM DELETED d
+			INSERT INTO ['+@RevSchemaName+'].['+@TableName+'Rev] SELECT d.'+@PrimaryKey+', '+ [rev].[GetPrefixedColumnNames](@TableName,'d', @SchemaName)+',''d'' as operation, GetDate() as updated, @USERNAME as updatedby FROM DELETED d
 		END
 	END';
 	END ELSE 
@@ -48,17 +50,19 @@ BEGIN
 	AFTER UPDATE, INSERT, DELETE
 	AS
 	BEGIN
+		DECLARE @USERNAME VARCHAR(100)
+        SET @USERNAME = CASE WHEN CONVERT(VARCHAR, CONTEXT_INFO()) <> '''' THEN CONVERT(VARCHAR, CONTEXT_INFO()) ELSE SYSTEM_USER END
 		IF EXISTS(SELECT * FROM INSERTED) AND EXISTS (SELECT * FROM DELETED)
 		BEGIN
-			INSERT INTO ['+@RevSchemaName+'].['+@TableName+'Rev] SELECT '+[rev].[GetPrefixedColumnNames](@TableName,'i', @SchemaName)+',''u'' as operation, GetDate() as updated, SYSTEM_USER as updatedby FROM INSERTED i
+			INSERT INTO ['+@RevSchemaName+'].['+@TableName+'Rev] SELECT '+[rev].[GetPrefixedColumnNames](@TableName,'i', @SchemaName)+',''u'' as operation, GetDate() as updated, @USERNAME as updatedby FROM INSERTED i
 		END	
 		IF EXISTS (SELECT * FROM INSERTED) AND NOT EXISTS(SELECT * FROM DELETED)
 		BEGIN
-			INSERT INTO ['+@RevSchemaName+'].['+@TableName+'Rev] SELECT '+[rev].[GetPrefixedColumnNames](@TableName,'i', @SchemaName)+',''i'' as operation, GetDate() as updated, SYSTEM_USER as updatedby FROM INSERTED i
+			INSERT INTO ['+@RevSchemaName+'].['+@TableName+'Rev] SELECT '+[rev].[GetPrefixedColumnNames](@TableName,'i', @SchemaName)+',''i'' as operation, GetDate() as updated, @USERNAME as updatedby FROM INSERTED i
 		END
 		IF EXISTS(SELECT * FROM DELETED) AND NOT EXISTS(SELECT * FROM INSERTED)
 		BEGIN
-			INSERT INTO ['+@RevSchemaName+'].['+@TableName+'Rev] SELECT '+ [rev].[GetPrefixedColumnNames](@TableName,'d', @SchemaName)+',''d'' as operation, GetDate() as updated, SYSTEM_USER as updatedby FROM DELETED d
+			INSERT INTO ['+@RevSchemaName+'].['+@TableName+'Rev] SELECT '+ [rev].[GetPrefixedColumnNames](@TableName,'d', @SchemaName)+',''d'' as operation, GetDate() as updated, @USERNAME as updatedby FROM DELETED d
 		END
 	END';	
 	END
