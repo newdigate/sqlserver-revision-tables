@@ -10,6 +10,8 @@ limitations:
 * the output of each stored procedures is limited to 8000 characters. This will be addressed shortly. 
 
 updates:
+* 09 January 2016
+	* Added option for application to override username by setting Context_Info(), for instance when using ASP.NET
 * 05 September 2015
 	* fixed SQLServer 2008 compatability issue by using [sys].[columns] instead of [sys].[dm_exec_describe_first_result_set] to get column definitions.
 	* Split sql into seperate schemas for revision tables and non-revision tables
